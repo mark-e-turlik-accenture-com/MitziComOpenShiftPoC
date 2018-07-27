@@ -14,12 +14,30 @@
 clear
 echo "################################################################"
 echo "###"
-echo "###  This script will create the OpenShift environment for ...
+echo "###  This script will create the OpenShift environment for ..."
 echo "###"
 echo "#################################################################"
 echo
+
+#----------------------------------------------------
+#---  Only run the script if you are the root user
+#----------------------------------------------------
+if [ `whoami` != "root" ] ; then
+   echo "You MUST run this script as the \"root\" user"
+   echo " ... existing"
+   exit
+fi
+
+#-----------------------------------------
+#--- Prompt for the GUID of the Cluster
+#-----------------------------------------
 echo -n "Enter the Cluster GUID: "
 read GUID
+
+echo "#####################################################"
+echo "### Save a copy of the original Ansible hosts file"
+echo "#####################################################"
+cp /etc/ansible/hosts /etc/ansible/hosts.ORIG
 
 echo "#######################"
 echo "### Get the ldap cert
@@ -36,7 +54,7 @@ echo "#############################################################"
 echo "### Replace the entered GUID within the ODE hosts template
 echo "#############################################################"
 cp ../inventory/hosts.homework /etc/ansible/hosts
-sed -i 's/GUID/$GUID/g' /etc/ansible/hosts
+sed -i "s/GUID/$GUID/g" /etc/ansible/hosts
 
 echo "##################################################################"
 echo "###  Run the ansible prerequisite and deploy-cluster play-books"
