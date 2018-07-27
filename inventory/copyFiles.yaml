@@ -1,0 +1,15 @@
+- name: Copy groupsync.yaml to master1
+  copy:
+    src: ./groupsync.yaml
+    dest: /etc/origin/master/groupsync.yaml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy whitelist.yaml to master1
+  copy:
+    src: ./whitelist.yaml
+    dest: /etc/origin/master/whitelist.yaml
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
