@@ -28,5 +28,10 @@ while [[ "$RESP" != "Y" && "$RESP" != "N" ]] ; do
    fi
 done
 
+echo -n "Enter Comment: "
+read comment
+
 cd ..
+git add .
+git commit -m "$comment"
 git push -f
