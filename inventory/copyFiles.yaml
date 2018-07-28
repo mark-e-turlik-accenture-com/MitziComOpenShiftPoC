@@ -1,15 +1,10 @@
-- name: Copy groupsync.yaml to master1
-  copy:
-    src: ./groupsync.yaml
-    dest: /etc/origin/master/groupsync.yaml
-    owner: root
-    group: root
-    mode: 0644
+- name: Transfer and execute script to create pvc on nfs server
+  hosts: nfs
+  user: root
+  sudo: yes
+  tesks:
+    - name: Transfer script
+    copy src=../scripts/create_pvc.sh dest=/tmp mode=0777
 
-- name: Copy whitelist.yaml to master1
-  copy:
-    src: ./whitelist.yaml
-    dest: /etc/origin/master/whitelist.yaml
-    owner: root
-    group: root
-    mode: u=rw,g=r,o=r
+    - name: Execute the script
+    command: sh /tmp/create_pvc.sh

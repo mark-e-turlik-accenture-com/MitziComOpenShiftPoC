@@ -81,6 +81,6 @@ oc get pod --all-namespaces -o wide
 echo "############################"
 echo "### Synchronize the groups"
 echo "############################"
-ansible mastera[0] -m copy -a "src=../inventory/groupsync.yaml dest=/etc/origin/master/groupsync.yaml"
-ansible mastera[0] -m copy -a "src=../inventory/whitelist.yaml dest=/etc/origin/master/whitelist.yaml"
-ansible master1.$GUID.internal -m shell -a "oc adm groups sync --sync-config=/etc/origin/master/groupsync.yaml --whitelist=/etc/origin/master/whitelist.yaml"
+ansible masters[0] -m copy -a "src=../inventory/groupsync.yaml dest=/etc/origin/master/groupsync.yaml"
+ansible masters[0] -m copy -a "src=../inventory/whitelist.yaml dest=/etc/origin/master/whitelist.yaml"
+ansible masters[0] -m shell -a'oc adm groups sync --sync-config=/etc/origin/master/groupsync.yaml --whitelist=/etc/origin/master/whitelist.yaml'
