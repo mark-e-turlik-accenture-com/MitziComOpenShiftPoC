@@ -84,3 +84,21 @@ echo "############################"
 ansible mastera[0] -m copy -a "src=../inventory/groupsync.yaml dest=/etc/origin/master/groupsync.yaml"
 ansible mastera[0] -m copy -a "src=../inventory/whitelist.yaml dest=/etc/origin/master/whitelist.yaml"
 ansible master1.$GUID.internal -m shell -a "oc adm groups sync --sync-config=/etc/origin/master/groupsync.yaml --whitelist=/etc/origin/master/whitelist.yaml"
+
+echo "#############################################"
+echo "### Create 10Gi and 5Gi persistent volumes"
+echo "#############################################"
+ansible-playbook ../inventory/create_nfs_pv.yaml
+./create_5gb_pv_yaml.sh
+./create_10gb_pv_yaml.sh
+cat /root/pvs/* | oc create -f -
+ansible nodes -m shell -a "docker pull registry.access.redhat.com/openshift3/ose-recycler:latest"
+ansible nodes -m shell -a "docker tag registry.access.redhat.com/openshift3/ose-recycler:latest \
+                           registry.access.redhat.com/openshift3/ose-recycler:v3.9.30"
+
+echo "#######################################################################"
+echo "### As a Smoke Test create and deploy the \"nodejs-mongo-persistent\""
+echo "#######################################################################"
+oc new-project smoke-test
+oc new-app nodejs-mongo-persistent
+

@@ -1,0 +1,7 @@
+- name: Transfer and execute script to create pv on nfs server
+  hosts: nfs
+  remote_user: root
+  sudo: yes
+  tasks:
+    - name: Execute the script
+      script: ../scripts/create_nfs_pv.sh

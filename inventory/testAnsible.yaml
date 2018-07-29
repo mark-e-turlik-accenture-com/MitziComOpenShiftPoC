@@ -1,0 +1,11 @@
+- name: Transfer and execute script to create pvc on nfs server
+  hosts: nfs
+  remote_user: root
+  sudo: yes
+  tasks:
+#    - name: Transfer script
+#      copy: src=../scripts/test.sh dest=/tmp mode=0777
+
+    - name: Execute the script
+      script: ../scripts/test.sh
+#      command: sh /tmp/test.sh

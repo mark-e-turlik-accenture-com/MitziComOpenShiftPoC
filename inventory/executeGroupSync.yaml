@@ -1,0 +1,12 @@
+- name: Transfer and execute script to sync ldap groups
+  hosts: masters[0]
+  user: root
+  sudo: yes
+  tasks:
+    - name: Transfer groupsync.yaml to /etc/origin/master
+      copy: src=groupsync.yaml dest=/etc/origin/master mode=0755
+    - name: Transfer whitelist.yaml to /etc/origin/master
+      copy: src=whitelist.yaml dest=/etc/origin/master mode=0755
+
+    - name: Execute the script
+      command: oc adm groups sync --sync-config=/etc/origin/master/groupsync.yaml --whitelist=/etc/origin/master/whitelist.yaml --confirm
