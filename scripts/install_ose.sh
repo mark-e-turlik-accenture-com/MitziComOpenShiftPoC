@@ -12,11 +12,14 @@
 ###
 #################################################################################
 clear
-echo "################################################################"
+echo "#############################################################################"
 echo "###"
-echo "###  This script will create the OpenShift environment for ..."
+echo "###  This script creates the entire OpenShift environment for the Mitzcom"
+echo "###  Corporation Proof of Concept engagement.  It is highly recommended"
+echo "###  that the user run this script from within a TMUX terminal session to"
+echo "###  allow for the session to be reattached if disconnected."
 echo "###"
-echo "#################################################################"
+echo "############################################################################"
 echo
 
 #----------------------------------------------------
