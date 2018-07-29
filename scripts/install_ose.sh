@@ -102,3 +102,9 @@ echo "#######################################################################"
 oc new-project smoke-test
 oc new-app nodejs-mongo-persistent
 
+echo "####################################################################################"
+echo "### Create Dev, Test and Prod projects. Deploy Jenkins app to manage deployment"
+echo "####################################################################################"
+oc new-project smoke-test
+oc new-app nodejs-mongo-persistent
+
