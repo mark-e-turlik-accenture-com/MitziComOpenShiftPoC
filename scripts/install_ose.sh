@@ -104,7 +104,16 @@ oc new-app nodejs-mongo-persistent
 
 echo "####################################################################################"
 echo "### Create Dev, Test and Prod projects. Deploy Jenkins app to manage deployment"
+echo "### Enable Jenkins Service account to manage resources in Test and Prod projects."
 echo "####################################################################################"
-oc new-project smoke-test
-oc new-app nodejs-mongo-persistent
+oc new-project pipeline-${GUID}-dev  --display-name="Develop Project"
+oc new-project pipeline-${GUID}-test --display-name="Test Project"
+oc new-project pipeline-${GUID}-prod --display-name="Production Project"
 
+oc project pipeline-${GUID}-dev
+oc new-app jenkins-persistent -p ENABLE_OAUTH=false -e JENKINS_PASSWORD=openshiftpipelines -n pipeline-${GUID}-dev
+
+oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenkins -n pipeline-${GUID}-test
+oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenkins -n pipeline-${GUID}-prod
+oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-test -n pipeline-${GUID}-dev
+oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-prod -n pipeline-${GUID}-dev
