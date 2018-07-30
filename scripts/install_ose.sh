@@ -160,4 +160,10 @@ oc expose service cotd2 -n pipeline-${GUID}-prod
 
 oc create -f ../inventory/pipeline_build.yaml
 
-
+echo "#############################"
+echo "### Add labels to the users"
+echo "#############################"
+oc label user/amy    client=alpha
+oc label user/andrew client=alpha
+oc label user/betty  client=beta
+oc label user/brian  client=beta
