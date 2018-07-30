@@ -42,11 +42,10 @@ echo "### Save a copy of the original Ansible hosts file"
 echo "#####################################################"
 cp /etc/ansible/hosts /etc/ansible/hosts.ORIG
 
-echo "#######################"
-echo "### Get the ldap cert
-echo "#######################"
-cd /root
-wget http://ipa.shared.example.opentlc.com/ipa/config/ca.crt -O /root/ipa-ca.crt
+#-------------------------------------------------------------------
+#--- Copy the htpasswd to /tmp for use by /etc/ansisble/hosts file
+#-------------------------------------------------------------------
+cp ../inventory/htpasswd.openshift /tmp
 
 echo "##############################################################"
 echo "### Add GUID environment variable to all host .bashrc files"
@@ -64,6 +63,11 @@ echo "###  Run the ansible prerequisite and deploy-cluster play-books"
 echo "##################################################################"
 ansible-playbook -f 20 /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
 ansible-playbook -f 20 /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
+
+#-----------------------------------
+#--- Remove the /tmp/htpasswd file
+#-----------------------------------
+rm -f /tmp/htpasswd.openshift
 
 echo "############################################"
 echo "### Verify Docker is running on all nodes"
@@ -84,9 +88,7 @@ oc get pod --all-namespaces -o wide
 echo "############################"
 echo "### Synchronize the groups"
 echo "############################"
-ansible mastera[0] -m copy -a "src=../inventory/groupsync.yaml dest=/etc/origin/master/groupsync.yaml"
-ansible mastera[0] -m copy -a "src=../inventory/whitelist.yaml dest=/etc/origin/master/whitelist.yaml"
-ansible master1.$GUID.internal -m shell -a "oc adm groups sync --sync-config=/etc/origin/master/groupsync.yaml --whitelist=/etc/origin/master/whitelist.yaml"
+ansible-playbook ../inventory/executeGroupSync.yaml
 
 echo "#############################################"
 echo "### Create 10Gi and 5Gi persistent volumes"
@@ -103,7 +105,8 @@ echo "#######################################################################"
 echo "### As a Smoke Test create and deploy the \"nodejs-mongo-persistent\""
 echo "#######################################################################"
 oc new-project smoke-test
-oc new-app nodejs-mongo-persistent
+oc new-app nodejs-mongo-persistent -n smoke-test
+oc logs -f build/nodejs-mongo-persistent-1 -n smoke-test
 
 echo "####################################################################################"
 echo "### Create Dev, Test and Prod projects. Deploy Jenkins app to manage deployment"
@@ -120,3 +123,7 @@ oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenki
 oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenkins -n pipeline-${GUID}-prod
 oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-test -n pipeline-${GUID}-dev
 oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-prod -n pipeline-${GUID}-dev
+
+oc project pipeline-${GUID}-dev
+oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-${GUID}-dev
+oc logs -f build/cotd2-1 -n pipeline-${GUID}-dev
