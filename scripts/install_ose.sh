@@ -53,7 +53,7 @@ echo "##############################################################"
 ansible localhost,all -m shell -a 'export GUID=`hostname | cut -d"." -f2`; echo "export GUID=$GUID" >> $HOME/.bashrc'
 
 echo "#############################################################"
-echo "### Replace the entered GUID within the ODE hosts template
+echo "### Replace the entered GUID within the ODE hosts template"
 echo "#############################################################"
 cp ../inventory/hosts.homework /etc/ansible/hosts
 sed -i "s/GUID/$GUID/g" /etc/ansible/hosts
@@ -124,6 +124,40 @@ oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenki
 oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-test -n pipeline-${GUID}-dev
 oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-prod -n pipeline-${GUID}-dev
 
+echo "###############################################################"
+echo "### Create the \"pipeline-${GUID}-dev\" project and cotd2 app"
+echo "###############################################################"
 oc project pipeline-${GUID}-dev
 oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-${GUID}-dev
 oc logs -f build/cotd2-1 -n pipeline-${GUID}-dev
+
+echo "##################################################"
+echo "### Tag the \"pipeline-${GUID}-dev]\" cotd2 app"
+echo "##################################################"
+oc tag cotd2:latest cotd2:testready -n pipeline-${GUID}-dev
+oc tag cotd2:testready cotd2:prodready -n pipeline-${GUID}-dev
+
+echo "######################################################"
+echo "### Create the Test project and associated cotd2 app"
+echo "######################################################"
+oc new-app pipeline-${GUID}-dev/cotd2:testready --name=cotd2 -n pipeline-${GUID}-test
+oc logs -f build/cotd2-1 -n pipeline-${GUID}-test
+
+echo "######################################################"
+echo "### Create the Prod project and associated cotd2 app"
+echo "######################################################"
+oc new-app pipeline-${GUID}-dev/cotd2:testready --name=cotd2 -n pipeline-${GUID}-prod
+oc logs -f build/cotd2-1 -n pipeline-${GUID}-prod
+###oc autoscale --min 1 --max 5 --cpu-percent=80
+###oc get hpa/hello-openshift -n test-hpa
+
+echo "########################################"
+echo "### Expose the Dev, Test and Prod APPs"
+echo "########################################"
+oc expose service cotd2 -n pipeline-${GUID}-dev
+oc expose service cotd2 -n pipeline-${GUID}-test
+oc expose service cotd2 -n pipeline-${GUID}-prod
+
+oc create -f ../inventory/pipeline_build.yaml
+
+
