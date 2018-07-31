@@ -1,0 +1,21 @@
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  annotations:
+    openshift.io/description: ""
+    openshift.io/display-name: ""
+    openshift.io/requester: system:admin
+    openshift.io/sa.scc.mcs: s0:c13,c2
+    openshift.io/sa.scc.supplemental-groups: 1000160000/10000
+    openshift.io/sa.scc.uid-range: 1000160000/10000
+  creationTimestamp: 2018-07-30T19:55:14Z
+  name: test
+  resourceVersion: "180210"
+  selfLink: /apis/project.openshift.io/v1/projects/test
+  uid: 79925210-9432-11e8-8235-0a6d5c1265fc
+spec:
+  finalizers:
+  - openshift.io/origin
+  - kubernetes
+status:
+  phase: Active

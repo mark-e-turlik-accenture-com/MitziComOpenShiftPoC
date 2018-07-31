@@ -11,15 +11,22 @@
 ###                deployment.
 ###
 #################################################################################
+
+#------------------------------------
+#---  Colored text escape sequences
+#------------------------------------
+red="\033[1;31m"
+reset=$(tput sgr0)
+
 clear
-echo "#############################################################################"
-echo "###"
-echo "###  This script creates the entire OpenShift environment for the Mitzcom"
-echo "###  Corporation Proof of Concept engagement.  It is highly recommended"
-echo "###  that the user run this script from within a TMUX terminal session to"
-echo "###  allow for the session to be reattached if disconnected."
-echo "###"
-echo "############################################################################"
+echo -e "#############################################################################"
+echo -e "###"
+echo -e "###  This script creates the entire OpenShift environment for the Mitzcom"
+echo -e "###  Corporation Proof of Concept engagement.  It is ${red}highly recommended${reset}"
+echo -e "###  ${red}that the user run this script from within a TMUX terminal session ${reset}to"
+echo -e "###  allow for the session to be reattached if disconnected."
+echo -e "###"
+echo -e "#############################################################################"
 echo
 
 #----------------------------------------------------
@@ -85,11 +92,6 @@ echo "####################################################"
 oc get nodes --show-labels
 oc get pod --all-namespaces -o wide
 
-echo "############################"
-echo "### Synchronize the groups"
-echo "############################"
-ansible-playbook ../inventory/executeGroupSync.yaml
-
 echo "#############################################"
 echo "### Create 10Gi and 5Gi persistent volumes"
 echo "#############################################"
@@ -107,6 +109,12 @@ echo "#######################################################################"
 oc new-project smoke-test
 oc new-app nodejs-mongo-persistent -n smoke-test
 oc logs -f build/nodejs-mongo-persistent-1 -n smoke-test
+
+echo "#########################################################################################"
+echo "### Create a default projects template with limits and Network Policies set to ISOLATED"
+echo "###########################################################################################o#######################################"
+oc create -f ../files/default-project-template.yaml -n default
+ansible-playbook ../inventory/set_default_projects.yaml
 
 echo "####################################################################################"
 echo "### Create Dev, Test and Prod projects. Deploy Jenkins app to manage deployment"
@@ -148,8 +156,8 @@ echo "### Create the Prod project and associated cotd2 app"
 echo "######################################################"
 oc new-app pipeline-${GUID}-dev/cotd2:testready --name=cotd2 -n pipeline-${GUID}-prod
 oc logs -f build/cotd2-1 -n pipeline-${GUID}-prod
-###oc autoscale --min 1 --max 5 --cpu-percent=80
-###oc get hpa/hello-openshift -n test-hpa
+autoscale dc/cotd2 --min 1 --max 5 --cpu-percent=80
+oc get hpa/cotd2 -n pipeline-${GUID}-prod
 
 echo "########################################"
 echo "### Expose the Dev, Test and Prod APPs"
@@ -160,10 +168,28 @@ oc expose service cotd2 -n pipeline-${GUID}-prod
 
 oc create -f ../inventory/pipeline_build.yaml
 
-echo "#############################"
-echo "### Add labels to the users"
-echo "#############################"
-oc label user/amy    client=alpha
+echo "###########################################################"
+echo "### Create and assign users to the Aplha and Bete groups"
+echo "###########################################################"
+oc adm groups new Alpha_Corp amy andrew
+oc adm groups new Beta_Corp betty brian
+oc label group/Aplha_Corp client=apha
+oc label group/Beta_Corp client=beta
+oc label user/amy client=alpha
 oc label user/andrew client=alpha
-oc label user/betty  client=beta
-oc label user/brian  client=beta
+oc label user/betty client=beta
+oc label user/brain client=beta
+
+echo "###############################################################"
+echo "### Create and assign policies to the Alpha and Beta projects"
+echo "###############################################################"
+oc adm new-project alpha-project --display-name="Alpha Project" --description="Aplha Project for alpha resources" --node-selector="client=alpha"
+oc adm new-project beta-project --display-name="Beta Project" --description="Beta Project for beta resources" --node-selector="client=beta"
+oc adm policy add-role-to-group admin "Alpha_Corp" -n alpha-project
+oc adm policy add-role-to-group admin "Beta_Corp"  -n beta-project
+
+oc new-app nodejs-mongo-persistent -n alpha-project
+oc logs -f build/nodejs-mongo-persistent-1 -n alpha-project
+
+oc new-app nodejs-mongo-persistent -n beta-project
+oc logs -f build/nodejs-mongo-persistent-1 -n beta-project
