@@ -191,7 +191,7 @@ echo "### Create and assign users to the Aplha and Bete groups"
 echo "###########################################################"
 oc adm groups new Alpha_Corp amy andrew
 oc adm groups new Beta_Corp betty brian
-oc label group/Aplha_Corp client=apha
+oc label group/Alpha_Corp client=alpha
 oc label group/Beta_Corp client=beta
 oc label user/amy client=alpha
 oc label user/andrew client=alpha

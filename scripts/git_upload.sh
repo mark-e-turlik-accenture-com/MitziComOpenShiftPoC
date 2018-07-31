@@ -11,7 +11,7 @@
 clear
 echo "###############################################################"
 echo "### This script uploads all changes within the repository"
-echo "### \"mark-e-turlik-accenture-com/master/OpenShiftHomework\""
+echo "### \"mark-e-turlik-accenture-com/master/MitziComOpenShiftPoC\""
 echo "###############################################################"
 echo
 
