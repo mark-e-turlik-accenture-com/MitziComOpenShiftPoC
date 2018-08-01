@@ -48,9 +48,9 @@ while [ "$RESP" != "X" ] ; do
                RESP=`echo $RESP | tr '[:lower:]' '[:upper:]'`
         
                if [ "$RESP" == "A" ] ; then
-                  GROUP="Alpha_Corp"
+                  GROUP="Alpha-Corp"
                elif [ "$RESP" == "B" ] ; then
-                  GROUP="Beta_Corp"
+                  GROUP="Beta-Corp"
                elif [[ "$RESP" != "N" && "$RESP" != "X" ]] ; then
                   echo " ... Illegal entry, valid entries are A, B, N, or X"
                   echo

@@ -205,8 +205,8 @@ echo
 echo "###########################################################"
 echo "### Create and assign users to the Aplha and Bete groups"
 echo "###########################################################"
-oc adm groups new Alpha_Corp amy andrew
-oc adm groups new Beta_Corp betty brian
+oc adm groups new Alpha-Corp amy andrew
+oc adm groups new Beta-Corp betty brian
 
 echo
 echo "###############################################################"
@@ -214,8 +214,8 @@ echo "### Create and assign policies to the Alpha and Beta projects"
 echo "###############################################################"
 oc adm new-project alpha-project --display-name="Alpha Project" --description="Alpha Project for alpha resources" --node-selector="client=alpha"
 oc adm new-project beta-project --display-name="Beta Project" --description="Beta Project for beta resources" --node-selector="client=beta"
-oc adm policy add-role-to-group admin Alpha_Corp -n alpha-project
-oc adm policy add-role-to-group admin Beta_Corp  -n beta-project
+oc adm policy add-role-to-group admin Alpha-Corp -n alpha-project
+oc adm policy add-role-to-group admin Beta-Corp  -n beta-project
 
 oc new-app nodejs-mongo-persistent -n alpha-project
 sleep 3
