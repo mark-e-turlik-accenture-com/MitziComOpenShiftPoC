@@ -195,7 +195,7 @@ oc label group/Beta_Corp client=beta
 oc label user/amy client=alpha
 oc label user/andrew client=alpha
 oc label user/betty client=beta
-oc label user/brain client=beta
+oc label user/brian client=beta
 
 echo
 echo "###############################################################"
