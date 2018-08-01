@@ -48,7 +48,7 @@ echo
 echo "#####################################################"
 echo "### Save a copy of the original Ansible hosts file"
 echo "#####################################################"
-echo "cp /etc/ansible/hosts /etc/ansible/hosts.ORIG
+echo "cp /etc/ansible/hosts /etc/ansible/hosts.ORIG"
 cp /etc/ansible/hosts /etc/ansible/hosts.ORIG
 
 #-------------------------------------------------------------------
@@ -116,12 +116,12 @@ echo "#######################################################################"
 oc new-project smoke-test
 oc new-app nodejs-mongo-persistent -n smoke-test
 sleep 3
-oc logs -f build/nodejs-mongo-persistent-1 -n smoke-test
+oc logs -f bc/nodejs-mongo-persistent -n smoke-test
 
 echo
 echo "#########################################################################################"
 echo "### Create a default projects template with limits and Network Policies set to ISOLATED"
-echo "###########################################################################################o#######################################"
+echo "#########################################################################################"
 oc create -f ../files/default-project-template.yaml -n default
 ansible-playbook ../inventory/set_default_projects.yaml
 
@@ -129,59 +129,58 @@ echo "##########################################################################
 echo "### Create Dev, Test and Prod projects. Deploy Jenkins app to manage deployment"
 echo "### Enable Jenkins Service account to manage resources in Test and Prod projects."
 echo "####################################################################################"
-oc new-project pipeline-${GUID}-dev  --display-name="Develop Project"
-oc new-project pipeline-${GUID}-test --display-name="Test Project"
-oc new-project pipeline-${GUID}-prod --display-name="Production Project"
+oc new-project pipeline-dev  --display-name="Develop Project"
+oc new-project pipeline-test --display-name="Test Project"
+oc new-project pipeline-prod --display-name="Production Project"
 
-oc project pipeline-${GUID}-dev
-oc new-app jenkins-persistent -p ENABLE_OAUTH=false -e JENKINS_PASSWORD=openshiftpipelines -n pipeline-${GUID}-dev
+oc project pipeline-dev
+oc new-app jenkins-persistent -p ENABLE_OAUTH=false -e JENKINS_PASSWORD=openshiftpipelines -n pipeline-dev
 
-oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenkins -n pipeline-${GUID}-test
-oc policy add-role-to-user edit system:serviceaccount:pipeline-${GUID}-dev:jenkins -n pipeline-${GUID}-prod
-oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-test -n pipeline-${GUID}-dev
-oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-${GUID}-prod -n pipeline-${GUID}-dev
+oc policy add-role-to-user edit system:serviceaccount:pipeline-dev:jenkins -n pipeline-test
+oc policy add-role-to-user edit system:serviceaccount:pipeline-dev:jenkins -n pipeline-prod
+oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-test -n pipeline-dev
+oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-prod -n pipeline-dev
 
 echo
-echo "###############################################################"
-echo "### Create the \"pipeline-${GUID}-dev\" project and cotd2 app"
-echo "###############################################################"
-oc project pipeline-${GUID}-dev
-oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-${GUID}-dev
+echo "########################################################"
+echo "### Create the \"pipeline-dev\" project and cotd2 app"
+echo "########################################################"
+oc project pipeline-dev
+oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-dev
 sleep 3
-oc logs -f build/cotd2-1 -n pipeline-${GUID}-dev
-
-echo
-echo "##################################################"
-echo "### Tag the \"pipeline-${GUID}-dev]\" cotd2 app"
-echo "##################################################"
-oc tag cotd2:latest cotd2:testready -n pipeline-${GUID}-dev
-oc tag cotd2:testready cotd2:prodready -n pipeline-${GUID}-dev
+oc logs -f bc/cotd -n pipeline-dev
 
 echo
 echo "######################################################"
 echo "### Create the Test project and associated cotd2 app"
 echo "######################################################"
-oc new-app pipeline-${GUID}-dev/cotd2:testready --name=cotd2 -n pipeline-${GUID}-test
+oc new-app pipeline-dev/cotd2:testready --name=cotd2 -n pipeline-test
 sleep 3
-oc logs -f build/cotd2-1 -n pipeline-${GUID}-test
+oc logs -f bc/cotd -n pipeline-test
 
 echo
 echo "######################################################"
 echo "### Create the Prod project and associated cotd2 app"
 echo "######################################################"
-oc new-app pipeline-${GUID}-dev/cotd2:testready --name=cotd2 -n pipeline-${GUID}-prod
+oc new-app pipeline-dev/cotd2:testready --name=cotd2 -n pipeline-prod
 sleep 3
-oc logs -f build/cotd2-1 -n pipeline-${GUID}-prod
-autoscale dc/cotd2 --min 1 --max 5 --cpu-percent=80
-oc get hpa/cotd2 -n pipeline-${GUID}-prod
+oc logs -f bc/cotd -n pipeline-prod
+oc autoscale dc/cotd2 --min 1 --max 5 --cpu-percent=80
+oc get hpa/cotd2 -n pipeline-prod
+
+echo "#########################################"
+echo "### Tag the \"pipeline-dev\" cotd2 app"
+echo "#########################################"
+oc tag cotd2:latest cotd2:testready -n pipeline-dev
+oc tag cotd2:testready cotd2:prodready -n pipeline-dev
 
 echo
 echo "########################################"
 echo "### Expose the Dev, Test and Prod APPs"
 echo "########################################"
-oc expose service cotd2 -n pipeline-${GUID}-dev
-oc expose service cotd2 -n pipeline-${GUID}-test
-oc expose service cotd2 -n pipeline-${GUID}-prod
+oc expose service cotd2 -n pipeline-dev
+oc expose service cotd2 -n pipeline-test
+oc expose service cotd2 -n pipeline-prod
 
 oc create -f ../inventory/pipeline_build.yaml
 
@@ -204,13 +203,13 @@ echo "### Create and assign policies to the Alpha and Beta projects"
 echo "###############################################################"
 oc adm new-project alpha-project --display-name="Alpha Project" --description="Alpha Project for alpha resources" --node-selector="client=alpha"
 oc adm new-project beta-project --display-name="Beta Project" --description="Beta Project for beta resources" --node-selector="client=beta"
-oc adm policy add-role-to-group admin "Alpha_Corp" -n alpha-project
-oc adm policy add-role-to-group admin "Beta_Corp"  -n beta-project
+oc adm policy add-role-to-group admin Alpha_Corp -n alpha-project
+oc adm policy add-role-to-group admin Beta_Corp  -n beta-project
 
 oc new-app nodejs-mongo-persistent -n alpha-project
 sleep 3
-oc logs -f build/nodejs-mongo-persistent-1 -n alpha-project
+oc logs -f bc/nodejs-mongo-persistent -n alpha-project
 
 oc new-app nodejs-mongo-persistent -n beta-project
 sleep 3
-oc logs -f build/nodejs-mongo-persistent-1 -n beta-project
+oc logs -f bc/nodejs-mongo-persistent -n beta-project
