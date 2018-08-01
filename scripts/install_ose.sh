@@ -17,7 +17,7 @@
 #------------------------------------
 red="\033[1;31m"
 reset=$(tput sgr0)
-
+(
 clear
 echo -e "#############################################################################"
 echo -e "###"
@@ -152,9 +152,10 @@ echo "### Create the \"Cat of the Day (cotd2)\" app in the \"pipeline-dev\" proj
 echo "##############################################################################"
 oc project pipeline-dev
 oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-dev
-sleep 3
-#oc logs -f build/cotd2-1 -n pipeline-dev
-oc logs -f bc/cotd -n pipeline-dev
+while [ `oc get pods | grep ^cotd2 | egrep '(Completed|Running)' | wc -l` != 2 ] ; do
+   echo "... waiting for cotd2 build to complete"
+   sleep 5
+done
 
 echo "#############################################"
 echo "### Tag the cotd2 image the \"pipeline-dev\""
@@ -167,16 +168,12 @@ echo "###################################"
 echo "### Deploy the cotd2 app in TEST"
 echo "###################################"
 oc new-app pipeline-dev/cotd2:testready --name=cotd2 -n pipeline-test
-sleep 3
-oc logs -f bc/cotd -n pipeline-test
 
 echo
 echo "###################################"
 echo "### Deploy the cotd2 app in PROD"
 echo "###################################"
 oc new-app pipeline-dev/cotd2:prodready --name=cotd2 -n pipeline-prod
-sleep 3
-oc logs -f bc/cotd -n pipeline-prod
 
 echo
 echo "########################################"
@@ -198,8 +195,6 @@ echo "### Set up autoscaling for the cotd2 app in PROD"
 echo "##################################################"
 oc autoscale dc/cotd2 --min 1 --max 5 --cpu-percent=80 -n pipeline-prod
 oc get hpa/cotd2 -n pipeline-prod
-
-oc create -f ../inventory/pipeline_build.yaml
 
 echo
 echo "###########################################################"
@@ -224,3 +219,9 @@ oc logs -f bc/nodejs-mongo-persistent -n alpha-project
 oc new-app nodejs-mongo-persistent -n beta-project
 sleep 3
 oc logs -f bc/nodejs-mongo-persistent -n beta-project
+
+echo
+echo    "################################################################################################"
+echo -e "###  NOTE: All the output from this script has been re-directed to ${red}install_ose.log${reset}"
+echo    "################################################################################################"
+) | tee install_ose.log
