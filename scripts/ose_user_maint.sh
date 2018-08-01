@@ -41,27 +41,27 @@ while [ "$RESP" != "X" ] ; do
             sleep 3
          else
             RESP=Y
-            while [[ "$RESP" != "A" && "$RESP" != "B" && "$RESP" != "D" && "$RESP" != "X" ]] ; do
-               echo -n "Enter User Label (A)lpha, (B)eta, (D)efault, or e(X)it? "
+            while [[ "$RESP" != "A" && "$RESP" != "B" && "$RESP" != "N" && "$RESP" != "X" ]] ; do
+               echo -n "Enter User Label (A)lpha, (B)eta, (N)one or e(X)it? "
+
                read RESP
                RESP=`echo $RESP | tr '[:lower:]' '[:upper:]'`
         
                if [ "$RESP" == "A" ] ; then
-                  GROUP="Alpha Corp"
-                  LABEL="alpha"
+                  GROUP="Alpha_Corp"
                elif [ "$RESP" == "B" ] ; then
-                  GROUP="Beta Corp"
-                  LABEL=beta
-               elif [ "$RESP" != "X" ] ; then
-                  echo " ... Illegal entry, valid entries are A, B, D, and X"
+                  GROUP="Beta_Corp"
+               elif [[ "$RESP" != "N" && "$RESP" != "X" ]] ; then
+                  echo " ... Illegal entry, valid entries are A, B, N, or X"
                   echo
                fi
             done
 
             if [ "$RESP" != "X" ] ; then
                ansible masters[0] -m shell -a "htpasswd -mb /etc/origin/master/htpasswd $UNAME $NPASSWD"
-               oc adm groups add-users $GROUP $UNAME
-               oc label user/$UNAME client=$LABEL
+               if [ "$RESP" != "N" ] ; then
+                  oc adm groups add-users $GROUP $UNAME
+               fi
                echo -n "... Enter <return> to continue"
                read WAIT
             fi

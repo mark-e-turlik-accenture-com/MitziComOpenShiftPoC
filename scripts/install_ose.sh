@@ -92,6 +92,11 @@ echo "### Copy the .kube directory to allow system:admin access from the bastion
 echo "###################################################################################"
 ansible masters[0] -b -m fetch -a "src=/root/.kube/config dest=/root/.kube/config flat=yes"
 
+echo "###############################################"
+echo "### Give the admin user cluster-admin access"
+echo "###############################################"
+oc adm policy add-cluster-role-to-user cluster-admin admin
+
 echo "####################################################"
 echo "### Verify that the environment is functioning ..."
 echo "####################################################"
@@ -142,37 +147,36 @@ oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-
 oc policy add-role-to-group system:image-puller system:serviceaccounts:pipeline-prod -n pipeline-dev
 
 echo
-echo "########################################################"
-echo "### Create the \"pipeline-dev\" project and cotd2 app"
-echo "########################################################"
+echo "##############################################################################"
+echo "### Create the \"Cat of the Day (cotd2)\" app in the \"pipeline-dev\" project"
+echo "##############################################################################"
 oc project pipeline-dev
 oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-dev
 sleep 3
+#oc logs -f build/cotd2-1 -n pipeline-dev
 oc logs -f bc/cotd -n pipeline-dev
 
+echo "#############################################"
+echo "### Tag the cotd2 image the \"pipeline-dev\""
+echo "#############################################"
+oc tag cotd2:latest cotd2:testready -n pipeline-dev
+oc tag cotd2:testready cotd2:prodready -n pipeline-dev
+
 echo
-echo "######################################################"
-echo "### Create the Test project and associated cotd2 app"
-echo "######################################################"
+echo "###################################"
+echo "### Deploy the cotd2 app in TEST"
+echo "###################################"
 oc new-app pipeline-dev/cotd2:testready --name=cotd2 -n pipeline-test
 sleep 3
 oc logs -f bc/cotd -n pipeline-test
 
 echo
-echo "######################################################"
-echo "### Create the Prod project and associated cotd2 app"
-echo "######################################################"
-oc new-app pipeline-dev/cotd2:testready --name=cotd2 -n pipeline-prod
+echo "###################################"
+echo "### Deploy the cotd2 app in PROD"
+echo "###################################"
+oc new-app pipeline-dev/cotd2:prodready --name=cotd2 -n pipeline-prod
 sleep 3
 oc logs -f bc/cotd -n pipeline-prod
-oc autoscale dc/cotd2 --min 1 --max 5 --cpu-percent=80
-oc get hpa/cotd2 -n pipeline-prod
-
-echo "#########################################"
-echo "### Tag the \"pipeline-dev\" cotd2 app"
-echo "#########################################"
-oc tag cotd2:latest cotd2:testready -n pipeline-dev
-oc tag cotd2:testready cotd2:prodready -n pipeline-dev
 
 echo
 echo "########################################"
@@ -181,6 +185,19 @@ echo "########################################"
 oc expose service cotd2 -n pipeline-dev
 oc expose service cotd2 -n pipeline-test
 oc expose service cotd2 -n pipeline-prod
+
+echo
+echo "##########################################"
+echo "### Create the pipeline-dev build config"
+echo "##########################################"
+oc create -f ../inventory/pipeline_build.yaml
+
+echo
+echo "##################################################"
+echo "### Set up autoscaling for the cotd2 app in PROD"
+echo "##################################################"
+oc autoscale dc/cotd2 --min 1 --max 5 --cpu-percent=80 -n pipeline-prod
+oc get hpa/cotd2 -n pipeline-prod
 
 oc create -f ../inventory/pipeline_build.yaml
 
