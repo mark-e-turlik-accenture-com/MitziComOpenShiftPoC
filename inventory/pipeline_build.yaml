@@ -53,7 +53,7 @@ items:
                                openshiftDeploy apiURL: 'https://openshift.default.svc.cluster.local', authToken: '', depCfg: 'cotd2', namespace: 'pipeline-test', verbose: 'false', waitTime: ''
 
                                openshiftVerifyDeployment apiURL: 'https://openshift.default.svc.cluster.local', authToken: '', depCfg: 'cotd2', namespace: 'pipeline-test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '10'
-                               sh 'curl http://cotd2-pipeline-test.apps.7424.example.opentlc.com/data/ | grep cats -q'
+                               sh 'curl http://cotd2-pipeline-test.apps.GUID.example.opentlc.com/data/ | grep cats -q'
 
                                stage ('Promote and Verify in Production Env')
                                echo '*** Waiting for Input ***'
@@ -63,7 +63,7 @@ items:
                                openshiftDeploy apiURL: 'https://openshift.default.svc.cluster.local', authToken: '', depCfg: 'cotd2', namespace: 'pipeline-prod', verbose: 'false', waitTime: ''
                                openshiftVerifyDeployment apiURL: 'https://openshift.default.svc.cluster.local', authToken: '', depCfg: 'cotd2', namespace: 'pipeline-prod', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '10'
                                sleep 10
-                               sh 'curl http://cotd2-pipeline-prod.apps.7424.example.opentlc.com/data/ | grep cats -q'
+                               sh 'curl http://cotd2-pipeline-prod.apps.GUID.example.opentlc.com/data/ | grep cats -q'
                             }
 
 kind: List
