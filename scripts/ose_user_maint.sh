@@ -74,7 +74,9 @@ while [ "$RESP" != "X" ] ; do
             ansible masters[0] -m shell -a "htpasswd -D /etc/origin/master/htpasswd $UNAME"
 
             GROUP=`oc get groups | grep brian | awk '{print $1}'`
-            oc adm groups remove-users $GROUP $UNAME
+            if [ "$GROUP" != "" ] ; then
+               oc adm groups remove-users $GROUP $UNAME
+            fi
 
             echo -n "... Enter <return> to continue"
             read WAIT

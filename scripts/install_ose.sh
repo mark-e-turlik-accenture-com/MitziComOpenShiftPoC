@@ -17,7 +17,6 @@
 #------------------------------------
 red="\033[1;31m"
 reset=$(tput sgr0)
-(
 clear
 echo -e "#############################################################################"
 echo -e "###"
@@ -37,7 +36,10 @@ if [ `whoami` != "root" ] ; then
    echo " ... existing"
    exit
 fi
-
+(
+echo "########################################"
+echo "### Pre-OpenShift Installation command"
+echo "########################################"
 #-----------------------------------------
 #--- Prompt for the GUID of the Cluster
 #-----------------------------------------
@@ -60,12 +62,14 @@ echo
 echo "##############################################################"
 echo "### Add GUID environment variable to all host .bashrc files"
 echo "##############################################################"
+echo "ansible localhost,all -m shell -a 'export GUID=`hostname | cut -d\".\" -f2`; echo \"export GUID=$GUID\" >> $HOME/.bashrc'"
 ansible localhost,all -m shell -a 'export GUID=`hostname | cut -d"." -f2`; echo "export GUID=$GUID" >> $HOME/.bashrc'
 
 echo
 echo "#############################################################"
 echo "### Replace the entered GUID within the ODE hosts template"
 echo "#############################################################"
+echo "sed -i \"s/GUID/$GUID/g\" /etc/ansible/hosts"
 cp ../inventory/hosts.homework /etc/ansible/hosts
 sed -i "s/GUID/$GUID/g" /etc/ansible/hosts
 
@@ -73,8 +77,19 @@ echo
 echo "##################################################################"
 echo "###  Run the ansible prerequisite and deploy-cluster play-books"
 echo "##################################################################"
+echo "ansible-playbook -f 20 /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml"
+echo "ansible-playbook -f 20 /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml"
+) | tee install_ose.log
+
 ansible-playbook -f 20 /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
 ansible-playbook -f 20 /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
+
+(
+echo
+echo
+echo "#########################################"
+echo "### Post-OpenShift Installation command"
+echo "#########################################"
 
 #-----------------------------------
 #--- Remove the /tmp/htpasswd file
@@ -87,16 +102,19 @@ echo "### Verify Docker is running on all nodes"
 echo "############################################"
 ansible nodes -m shell -a"systemctl status docker | grep Active"
 
+echo
 echo "###################################################################################"
 echo "### Copy the .kube directory to allow system:admin access from the bastion host"
 echo "###################################################################################"
 ansible masters[0] -b -m fetch -a "src=/root/.kube/config dest=/root/.kube/config flat=yes"
 
+echo
 echo "###############################################"
 echo "### Give the admin user cluster-admin access"
 echo "###############################################"
 oc adm policy add-cluster-role-to-user cluster-admin admin
 
+echo
 echo "####################################################"
 echo "### Verify that the environment is functioning ..."
 echo "####################################################"
@@ -150,13 +168,13 @@ echo
 echo "##############################################################################"
 echo "### Create the \"Cat of the Day (cotd2)\" app in the \"pipeline-dev\" project"
 echo "##############################################################################"
-oc project pipeline-dev
 oc new-app php~https://github.com/StefanoPicozzi/cotd2 -n pipeline-dev
 while [ `oc get pods | grep ^cotd2 | egrep '(Completed|Running)' | wc -l` != 2 ] ; do
    echo "... waiting for cotd2 build to complete"
    sleep 5
 done
 
+echo
 echo "#############################################"
 echo "### Tag the cotd2 image the \"pipeline-dev\""
 echo "#############################################"
@@ -198,7 +216,7 @@ oc get hpa/cotd2 -n pipeline-prod
 
 echo
 echo "###########################################################"
-echo "### Create and assign users to the Aplha and Bete groups"
+echo "### Create and assign users to the Alpha and Beta groups"
 echo "###########################################################"
 oc adm groups new Alpha-Corp amy andrew
 oc adm groups new Beta-Corp betty brian
@@ -212,16 +230,24 @@ oc adm new-project beta-project --display-name="Beta Project" --description="Bet
 oc adm policy add-role-to-group admin Alpha-Corp -n alpha-project
 oc adm policy add-role-to-group admin Beta-Corp  -n beta-project
 
+echo
+echo "########################################################################"
+echo "### Create the \"nodejs-mongo-persistent\" app within the Alpha projects"
+echo "########################################################################"
 oc new-app nodejs-mongo-persistent -n alpha-project
 sleep 3
 oc logs -f bc/nodejs-mongo-persistent -n alpha-project
 
+echo
+echo "########################################################################"
+echo "### Create the \"nodejs-mongo-persistent\" app within the Beta projects"
+echo "########################################################################"
 oc new-app nodejs-mongo-persistent -n beta-project
 sleep 3
 oc logs -f bc/nodejs-mongo-persistent -n beta-project
 
 echo
-echo    "################################################################################################"
-echo -e "###  NOTE: All the output from this script has been re-directed to ${red}install_ose.log${reset}"
-echo    "################################################################################################"
-) | tee install_ose.log
+echo    "#######################################################################################################"
+echo -e "###  NOTE: All Pre amd Post OpenShift install out has been re-directed to ${red}install_ose.log${reset}"
+echo    "#######################################################################################################"
+) | tee -a install_ose.log

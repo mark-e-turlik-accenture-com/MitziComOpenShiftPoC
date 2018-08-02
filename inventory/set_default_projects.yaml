@@ -1,4 +1,4 @@
-- name: Set the default projects template with Limits and NetworxPolicy defaults
+- name: Set the default projects template with Limits and NetworkPolicy defaults
   hosts: masters[0]
   remote_user: root
   sudo: yes
