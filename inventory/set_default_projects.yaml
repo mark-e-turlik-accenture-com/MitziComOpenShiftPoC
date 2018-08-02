@@ -1,7 +1,7 @@
 - name: Set the default projects template with Limits and NetworkPolicy defaults
   hosts: masters[0]
-  remote_user: root
-  sudo: yes
+  become_user: root
+  become: yes
   tasks:
     - name: Execute the script
       script: ../scripts/set_default_project.sh

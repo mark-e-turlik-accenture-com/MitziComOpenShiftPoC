@@ -245,9 +245,9 @@ echo "########################################################################"
 oc new-app nodejs-mongo-persistent -n beta-project
 sleep 3
 oc logs -f bc/nodejs-mongo-persistent -n beta-project
+) | tee -a install_ose.log
 
 echo
-echo    "#######################################################################################################"
-echo -e "###  NOTE: All Pre amd Post OpenShift install out has been re-directed to ${red}install_ose.log${reset}"
-echo    "#######################################################################################################"
-) | tee -a install_ose.log
+echo    "############################################################################################################"
+echo -e "###  NOTE: All Pre- and Post- OpenShift installation commands have been re-directed to the ${red}install_ose.log${reset}"
+echo    "############################################################################################################"
