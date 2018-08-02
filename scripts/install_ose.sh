@@ -205,6 +205,7 @@ echo
 echo "##########################################"
 echo "### Create the pipeline-dev build config"
 echo "##########################################"
+sed -i "s/GUID/${GUID}/g" ../inventory/pipeline_build.yaml
 oc create -f ../inventory/pipeline_build.yaml
 
 echo
