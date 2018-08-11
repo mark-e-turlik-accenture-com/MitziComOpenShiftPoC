@@ -1,7 +1,7 @@
 #!/bin/bash
 #####################################################################################
 ###
-###  Script: create_pvc.sh
+###  Script: test.sh
 ###
 ###  Description: This script is run on the nfs support1.GUID.example.com server
 ###               to create persistent storage volumes.
